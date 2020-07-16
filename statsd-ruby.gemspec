@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-Gem::Specification.new("statsd-ruby", "1.4.0") do |s|
+Gem::Specification.new("statsd-ruby-tcp", "1.4.0") do |s|
   s.authors =  `git log --format='%aN' | sort -u`.split("\n")
   s.email = "reinh@reinh.com"
 
@@ -22,4 +22,3 @@ Gem::Specification.new("statsd-ruby", "1.4.0") do |s|
   s.add_development_dependency "simplecov", ">= 0.6.4"
   s.add_development_dependency "rake"
 end
-
