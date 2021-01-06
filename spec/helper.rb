@@ -4,7 +4,7 @@ require 'simplecov'
 SimpleCov.start
 
 require 'minitest/autorun'
-require 'statsd'
+require 'statsd_tcp'
 require 'logger'
 require 'timeout'
 

@@ -2,14 +2,14 @@ require 'socket'
 require 'forwardable'
 require 'json'
 
-require 'statsd/monotonic_time'
+require 'statsd_tcp/monotonic_time'
 
-# = Statsd: A Statsd client (https://github.com/etsy/statsd)
+# = StatsdTcp: A StatsdTcp client (https://github.com/etsy/statsd)
 #
-# @example Set up a global Statsd client for a server on localhost:8125
-#   $statsd = Statsd.new 'localhost', 8125
-# @example Set up a global Statsd client for a server on IPv6 port 8125
-#   $statsd = Statsd.new '::1', 8125
+# @example Set up a global StatsdTcp client for a server on localhost:8125
+#   $statsd = StatsdTcp.new 'localhost', 8125
+# @example Set up a global StatsdTcp client for a server on IPv6 port 8125
+#   $statsd = StatsdTcp.new '::1', 8125
 # @example Send some stats
 #   $statsd.increment 'garets'
 #   $statsd.timing 'glork', 320
@@ -17,34 +17,34 @@ require 'statsd/monotonic_time'
 # @example Use {#time} to time the execution of a block
 #   $statsd.time('account.activate') { @account.activate! }
 # @example Create a namespaced statsd client and increment 'account.activate'
-#   statsd = Statsd.new('localhost').tap{|sd| sd.namespace = 'account'}
+#   statsd = StatsdTcp.new('localhost').tap{|sd| sd.namespace = 'account'}
 #   statsd.increment 'activate'
 #
-# Statsd instances are thread safe for general usage, by utilizing the thread
+# StatsdTcp instances are thread safe for general usage, by utilizing the thread
 # safe nature of UDP sends. The attributes are stateful, and are not
 # mutexed, it is expected that users will not change these at runtime in
 # threaded environments. If users require such use cases, it is recommend that
-# users either mutex around their Statsd object, or create separate objects for
+# users either mutex around their StatsdTcp object, or create separate objects for
 # each namespace / host+port combination.
-class Statsd
+class StatsdTcp
 
   # = Batch: A batching statsd proxy
   #
   # @example Batch a set of instruments using Batch and manual flush:
-  #   $statsd = Statsd.new 'localhost', 8125
-  #   batch = Statsd::Batch.new($statsd)
+  #   $statsd = StatsdTcp.new 'localhost', 8125
+  #   batch = StatsdTcp::Batch.new($statsd)
   #   batch.increment 'garets'
   #   batch.timing 'glork', 320
   #   batch.gauge 'bork', 100
   #   batch.flush
   #
-  # Batch is a subclass of Statsd, but with a constructor that proxies to a
-  # normal Statsd instance. It has it's own batch_size and namespace parameters
-  # (that inherit defaults from the supplied Statsd instance). It is recommended
+  # Batch is a subclass of StatsdTcp, but with a constructor that proxies to a
+  # normal StatsdTcp instance. It has it's own batch_size and namespace parameters
+  # (that inherit defaults from the supplied StatsdTcp instance). It is recommended
   # that some care is taken if setting very large batch sizes. If the batch size
   # exceeds the allowed packet size for UDP on your network, communication
   # troubles may occur and data will be lost.
-  class Batch < Statsd
+  class Batch < StatsdTcp
 
     extend Forwardable
     def_delegators :@statsd,
@@ -57,7 +57,7 @@ class Statsd
 
     attr_accessor :batch_size, :batch_byte_size, :flush_interval
 
-    # @param [Statsd] statsd requires a configured Statsd instance
+    # @param [StatsdTcp] statsd requires a configured StatsdTcp instance
     def initialize(statsd)
       @statsd = statsd
       @batch_size = statsd.batch_size
@@ -236,10 +236,10 @@ class Statsd
     end
 
     def send_to_socket(message)
-      self.class.logger.debug { "Statsd: #{message}" } if self.class.logger
+      self.class.logger.debug { "StatsdTcp: #{message}" } if self.class.logger
       @socket.write(message.to_s + "\n")
     rescue => boom
-      self.class.logger.error { "Statsd: #{boom.class} #{boom}" } if self.class.logger
+      self.class.logger.error { "StatsdTcp: #{boom.class} #{boom}" } if self.class.logger
       nil
     end
 
@@ -468,7 +468,7 @@ class Statsd
   protected
 
   def send_to_socket(message)
-    self.class.logger.debug { "Statsd: #{message}" } if self.class.logger
+    self.class.logger.debug { "StatsdTcp: #{message}" } if self.class.logger
 
     retries = 0
     n = 0
@@ -490,7 +490,7 @@ class Statsd
     end
     n
   rescue => boom
-    self.class.logger.error { "Statsd: #{boom.class} #{boom}" } if self.class.logger
+    self.class.logger.error { "StatsdTcp: #{boom.class} #{boom}" } if self.class.logger
     nil
   end
 

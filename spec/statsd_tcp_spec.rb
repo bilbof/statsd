@@ -1,8 +1,8 @@
 require 'helper'
 
-describe Statsd do
+describe StatsdTcp do
   before do
-    class Statsd
+    class StatsdTcp
       o, $VERBOSE = $VERBOSE, nil
       alias connect_old connect
       def connect
@@ -12,12 +12,12 @@ describe Statsd do
       $VERBOSE = o
     end
 
-    @statsd = Statsd.new('localhost', 1234)
+    @statsd = StatsdTcp.new('localhost', 1234)
     @socket = @statsd.instance_variable_set(:@socket, FakeUDPSocket.new)
   end
 
   after do
-    class Statsd
+    class StatsdTcp
       o, $VERBOSE = $VERBOSE, nil
       alias connect connect_old
       $VERBOSE = o
@@ -31,7 +31,7 @@ describe Statsd do
     end
 
     it "should default the host to 127.0.0.1 and port to 8125" do
-      statsd = Statsd.new
+      statsd = StatsdTcp.new
       statsd.host.must_equal '127.0.0.1'
       statsd.port.must_equal 8125
     end
@@ -287,18 +287,18 @@ describe Statsd do
 
   describe "with logging" do
     require 'stringio'
-    before { Statsd.logger = Logger.new(@log = StringIO.new)}
+    before { StatsdTcp.logger = Logger.new(@log = StringIO.new)}
 
     it "should write to the log in debug" do
-      Statsd.logger.level = Logger::DEBUG
+      StatsdTcp.logger.level = Logger::DEBUG
 
       @statsd.increment('foobar')
 
-      @log.string.must_match "Statsd: foobar:1|c"
+      @log.string.must_match "StatsdTcp: foobar:1|c"
     end
 
     it "should not write to the log unless debug" do
-      Statsd.logger.level = Logger::INFO
+      StatsdTcp.logger.level = Logger::INFO
 
       @statsd.increment('foobar')
 
@@ -312,10 +312,10 @@ describe Statsd do
     end
 
     it "should replace ruby constant delimeter with graphite package name" do
-      class Statsd::SomeClass; end
-      @statsd.increment(Statsd::SomeClass, 1)
+      class StatsdTcp::SomeClass; end
+      @statsd.increment(StatsdTcp::SomeClass, 1)
 
-      @socket.recv.must_equal ['Statsd.SomeClass:1|c']
+      @socket.recv.must_equal ['StatsdTcp.SomeClass:1|c']
     end
 
     describe "custom delimiter" do
@@ -324,10 +324,10 @@ describe Statsd do
       end
 
       it "should replace ruby constant delimiter with custom delimiter" do
-        class Statsd::SomeOtherClass; end
-        @statsd.increment(Statsd::SomeOtherClass, 1)
+        class StatsdTcp::SomeOtherClass; end
+        @statsd.increment(StatsdTcp::SomeOtherClass, 1)
 
-        @socket.recv.must_equal ['Statsd-SomeOtherClass:1|c']
+        @socket.recv.must_equal ['StatsdTcp-SomeOtherClass:1|c']
       end
     end
 
@@ -340,7 +340,7 @@ describe Statsd do
   describe "handling socket errors" do
     before do
       require 'stringio'
-      Statsd.logger = Logger.new(@log = StringIO.new)
+      StatsdTcp.logger = Logger.new(@log = StringIO.new)
       @socket.instance_eval { def write(*) raise SocketError end }
     end
 
@@ -350,7 +350,7 @@ describe Statsd do
 
     it "should log socket errors" do
       @statsd.increment('foobar')
-      @log.string.must_match 'Statsd: SocketError'
+      @log.string.must_match 'StatsdTcp: SocketError'
     end
   end
 
@@ -450,7 +450,7 @@ describe Statsd do
     end
 
     it "should not flush to the socket if the backlog is empty" do
-      batch = Statsd::Batch.new(@statsd)
+      batch = StatsdTcp::Batch.new(@statsd)
       batch.flush
       @socket.recv.must_be :nil?
 
@@ -460,19 +460,19 @@ describe Statsd do
     end
 
     it "should support setting namespace for the underlying instance" do
-      batch = Statsd::Batch.new(@statsd)
+      batch = StatsdTcp::Batch.new(@statsd)
       batch.namespace = 'ns'
       @statsd.namespace.must_equal 'ns'
     end
 
     it "should support setting host for the underlying instance" do
-      batch = Statsd::Batch.new(@statsd)
+      batch = StatsdTcp::Batch.new(@statsd)
       batch.host = '1.2.3.4'
       @statsd.host.must_equal '1.2.3.4'
     end
 
     it "should support setting port for the underlying instance" do
-      batch = Statsd::Batch.new(@statsd)
+      batch = StatsdTcp::Batch.new(@statsd)
       batch.port = 42
       @statsd.port.must_equal 42
     end
@@ -489,7 +489,7 @@ describe Statsd do
 
 end
 
-describe Statsd do
+describe StatsdTcp do
   describe "with a real UDP socket" do
     it "should actually send stuff over the socket" do
       family = Addrinfo.udp(UDPSocket.getaddress('localhost'), 0).afamily
@@ -499,7 +499,7 @@ describe Statsd do
         socket.bind(host, port)
         port = socket.addr[1]
 
-        statsd = Statsd.new(host, port)
+        statsd = StatsdTcp.new(host, port)
         statsd.increment('foobar')
         message = socket.recvfrom(16).first
         message.must_equal 'foobar:1|c'
@@ -515,7 +515,7 @@ describe Statsd do
         socket.bind(host, port)
         port = socket.addr[1]
 
-        statsd = Statsd.new(host, port)
+        statsd = StatsdTcp.new(host, port)
         statsd.increment('foobar')
         message = socket.recvfrom(16).first
         message.must_equal 'foobar:1|c'
@@ -531,7 +531,7 @@ describe Statsd do
         socket.bind(host, port)
         port = socket.addr[1]
 
-        statsd = Statsd.new(host, port)
+        statsd = StatsdTcp.new(host, port)
         statsd.increment('foobar')
         message = socket.recvfrom(16).first
         message.must_equal 'foobar:1|c'
@@ -551,7 +551,7 @@ describe Statsd do
         socket = nil
         Thread.new { socket = server.accept }
 
-        statsd = Statsd.new(host, port, :tcp)
+        statsd = StatsdTcp.new(host, port, :tcp)
         statsd.increment('foobar')
 
         Timeout.timeout(5) do
@@ -575,7 +575,7 @@ describe Statsd do
         socket = nil
         Thread.new { socket = server.accept }
 
-        statsd = Statsd.new(host, port, :tcp)
+        statsd = StatsdTcp.new(host, port, :tcp)
         statsd.increment('foobar')
 
         Timeout.timeout(5) do

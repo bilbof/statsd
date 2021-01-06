@@ -5,15 +5,15 @@ A Ruby client for {StatsD}[https://github.com/etsy/statsd]
 = Installing
 
 Bundler:
-  gem "statsd-ruby"
+  gem "statsd-ruby-tcp"
 
 = Basic Usage
 
-  # Set up a global Statsd client for a server on localhost:9125
-  $statsd = Statsd.new 'localhost', 9125
+  # Set up a global StatsdTcp client for a server on localhost:9125
+  $statsd = StatsdTcp.new 'localhost', 9125
 
-  # Set up a global Statsd client for a server on IPv6 port 9125
-  $statsd = Statsd.new '::1', 9125
+  # Set up a global StatsdTcp client for a server on IPv6 port 9125
+  $statsd = StatsdTcp.new '::1', 9125
 
   # Send some stats
   $statsd.increment 'garets'
@@ -24,7 +24,7 @@ Bundler:
   $statsd.time('account.activate') { @account.activate! }
 
   # Create a namespaced statsd client and increment 'account.activate'
-  statsd = Statsd.new('localhost').tap{|sd| sd.namespace = 'account'}
+  statsd = StatsdTcp.new('localhost').tap{|sd| sd.namespace = 'account'}
   statsd.increment 'activate'
 
 = Testing

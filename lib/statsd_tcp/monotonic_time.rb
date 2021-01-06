@@ -1,4 +1,4 @@
-class Statsd
+class StatsdTcp
   # = MonotonicTime: a helper for getting monotonic time
   #
   # @example

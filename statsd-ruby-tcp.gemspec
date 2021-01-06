@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-Gem::Specification.new("statsd-ruby-tcp", "0.0.0") do |s|
+Gem::Specification.new("statsd-ruby-tcp", "0.1.2") do |s|
   s.authors =  `git log --format='%aN' | sort -u`.split("\n")
   s.email = "reinh@reinh.com"
 

@@ -1,9 +1,9 @@
 require 'helper'
 
-describe Statsd::Admin do
+describe StatsdTcp::Admin do
 
   before do
-    class Statsd::Admin
+    class StatsdTcp::Admin
       o, $VERBOSE = $VERBOSE, nil
       alias connect_old connect
       def connect
@@ -12,12 +12,12 @@ describe Statsd::Admin do
       end
       $VERBOSE = o
     end
-    @admin = Statsd::Admin.new('localhost', 1234)
+    @admin = StatsdTcp::Admin.new('localhost', 1234)
     @socket = @admin.instance_variable_set(:@socket, FakeTCPSocket.new)
   end
 
   after do
-    class Statsd::Admin
+    class StatsdTcp::Admin
       o, $VERBOSE = $VERBOSE, nil
       alias connect connect_old
       $VERBOSE = o
@@ -31,7 +31,7 @@ describe Statsd::Admin do
     end
 
     it "should default the host to 127.0.0.1 and port to 8126" do
-      statsd = Statsd::Admin.new
+      statsd = StatsdTcp::Admin.new
       statsd.host.must_equal '127.0.0.1'
       statsd.port.must_equal 8126
     end
